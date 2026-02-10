@@ -18,6 +18,7 @@ interface SearchResult {
     rowIndex: number;
     data: any[];
     id: string; // Unique ID for selection matching
+    context?: string; // Juzgado / Header context
 }
 
 export default function Home() {
@@ -74,7 +75,19 @@ export default function Home() {
             const sheet = workbook.Sheets[sheetName];
             const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: null }) as any[][];
 
+            let currentContext = '';
+
             jsonData.forEach((row, rowIndex) => {
+                // Heuristic: Identify "Juzgado" headers
+                const firstCell = row[0];
+                const secondCell = row[1];
+
+                if (firstCell && typeof firstCell === 'string' && (!secondCell || secondCell.toString().trim() === '')) {
+                    if (firstCell.trim().length > 5) {
+                        currentContext = firstCell.trim();
+                    }
+                }
+
                 // Search in all columns of the row
                 const rowString = row.map(cell => String(cell || '').toLowerCase()).join(' ');
                 if (rowString.includes(term)) {
@@ -82,7 +95,8 @@ export default function Home() {
                         sheetName,
                         rowIndex: rowIndex + 1, // 1-based index for display
                         data: row,
-                        id: `${sheetName}-${rowIndex}`
+                        id: `${sheetName}-${rowIndex}`,
+                        context: currentContext
                     });
                 }
             });
@@ -151,6 +165,7 @@ export default function Home() {
             doc.text(`Total seleccionados: ${selectedResults.length}`, 14, 36);
 
             const tableData = selectedResults.map(r => [
+                r.context || 'Sin asignar', // Juzgado / Origen
                 r.data[0] || '-', // Radicado
                 r.data[1] || '-', // Demandante
                 r.data[2] || '-', // Demandado/Juzgado
@@ -162,17 +177,18 @@ export default function Home() {
 
             autoTable(doc, {
                 startY: 44,
-                head: [['Radicado', 'Demandante', 'Demandado / Juzgado', 'Estado / Actuación', 'Hoja']],
+                head: [['Juzgado / Origen', 'Radicado', 'Demandante', 'Demandado / Juzgado', 'Estado / Actuación', 'Hoja']],
                 body: tableData,
                 theme: 'grid',
                 headStyles: { fillColor: [37, 99, 235] }, // Blue-600
                 styles: { fontSize: 8, cellPadding: 3 },
                 columnStyles: {
-                    0: { cellWidth: 25 },
-                    1: { cellWidth: 40 },
-                    2: { cellWidth: 50 },
-                    3: { cellWidth: 50 },
-                    4: { cellWidth: 20 }
+                    0: { cellWidth: 40 }, // Juzgado column
+                    1: { cellWidth: 25 },
+                    2: { cellWidth: 35 },
+                    3: { cellWidth: 40 },
+                    4: { cellWidth: 35 },
+                    5: { cellWidth: 15 }
                 }
             });
 
@@ -346,7 +362,12 @@ export default function Home() {
                                                     <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded uppercase tracking-wide">
                                                         Hoja: {result.sheetName}
                                                     </span>
-                                                    <span className="text-sm text-gray-500">Fila {result.rowIndex}</span>
+                                                    {result.context && (
+                                                        <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs font-semibold rounded uppercase tracking-wide max-w-[200px] truncate" title={result.context}>
+                                                            {result.context}
+                                                        </span>
+                                                    )}
+                                                    <span className="text-sm text-gray-500 ml-auto">Fila {result.rowIndex}</span>
                                                 </div>
                                             </div>
                                             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-sm">
