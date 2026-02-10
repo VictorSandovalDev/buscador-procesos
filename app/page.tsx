@@ -353,8 +353,14 @@ export default function Home() {
                 </div>
 
                 {/* Upload Section */}
-                <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 transition-all hover:shadow-md">
-                    <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-10 hover:bg-gray-50 transition-colors cursor-pointer relative">
+                <div className={cn(
+                    "bg-white p-8 rounded-xl shadow-sm border transition-all duration-300",
+                    workbook ? "border-green-200 shadow-md ring-1 ring-green-100" : "border-gray-100 hover:shadow-md"
+                )}>
+                    <div className={cn(
+                        "flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-10 transition-colors cursor-pointer relative",
+                        workbook ? "border-green-300 bg-green-50/50" : "border-gray-300 hover:bg-gray-50"
+                    )}>
                         <input
                             type="file"
                             accept=".xlsx, .xls"
@@ -362,19 +368,28 @@ export default function Home() {
                             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                         />
                         <div className="flex flex-col items-center space-y-4">
-                            <div className="p-4 bg-blue-50 rounded-full">
-                                <FileSpreadsheet className="w-8 h-8 text-blue-600" />
+                            <div className={cn(
+                                "p-4 rounded-full transition-colors",
+                                workbook ? "bg-green-100 text-green-600" : "bg-blue-50 text-blue-600"
+                            )}>
+                                {workbook ? <CheckSquare className="w-8 h-8" /> : <FileSpreadsheet className="w-8 h-8" />}
                             </div>
-                            <div className="text-center">
-                                <p className="text-lg font-medium text-gray-700">
+                            <div className="text-center space-y-1">
+                                <p className={cn("text-lg font-medium", workbook ? "text-green-800" : "text-gray-700")}>
                                     {file ? file.name : "Arrastra tu archivo Excel aquí o haz clic para subir"}
                                 </p>
-                                <p className="text-sm text-gray-500 mt-1">Soporta archivos .xlsx y .xls</p>
+                                {workbook ? (
+                                    <p className="text-green-600 font-semibold animate-in fade-in slide-in-from-bottom-1">
+                                        ¡Archivo cargado exitosamente! Ya puedes realizar tu búsqueda.
+                                    </p>
+                                ) : (
+                                    <p className="text-sm text-gray-500">Soporta archivos .xlsx y .xls</p>
+                                )}
                             </div>
                         </div>
                     </div>
                     {error && (
-                        <div className="mt-4 flex items-center text-red-600 bg-red-50 p-3 rounded-lg">
+                        <div className="mt-4 flex items-center text-red-600 bg-red-50 p-3 rounded-lg animate-in fade-in">
                             <AlertCircle className="w-5 h-5 mr-2" />
                             {error}
                         </div>
