@@ -101,7 +101,24 @@ export default function Home() {
                         text.includes('CIVIL'); // Added CIVIL since user explicitly mentioned it
 
                     if (isCourtHeader && text.length > 5) {
-                        currentContext = firstCell.trim();
+                        try {
+                            const raw = firstCell.toString().trim();
+                            // If spaces are double or more, use them as word delimiters
+                            if (raw.includes('  ')) {
+                                const words = raw.split(/\s{2,}/);
+                                const cleanedWords = words.map((w: string) => w.replace(/\s+/g, ''));
+                                currentContext = cleanedWords.join(' ');
+                            } else {
+                                // Fallback if no double spaces found, try to reconstruct best effort or leave as is
+                                // For now, just remove single spaces if it looks weirdly spaced
+                                const noSpaces = raw.replace(/\s+/g, '');
+                                // If removing spaces makes it readable (length difference is huge), use it? No, risky.
+                                // Just use raw if no double spaces.
+                                currentContext = raw;
+                            }
+                        } catch (e) {
+                            currentContext = firstCell.trim();
+                        }
                     }
                 }
 
