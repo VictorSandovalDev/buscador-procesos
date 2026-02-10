@@ -301,8 +301,8 @@ export default function Home() {
                 r.context || 'Sin asignar', // Juzgado / Origen
                 r.data[0] || '-', // Radicado
                 r.data[1] || '-', // Demandante
-                r.data[2] || '-', // Demandado/Juzgado
-                r.data[3] || '-', // Estado/Actuación
+                r.data[2] || '-', // Demandado
+                r.data[3] || '-', // Estado / Actuación (This is what user requested back if missing)
                 r.sheetName
             ]);
 
@@ -310,7 +310,7 @@ export default function Home() {
 
             autoTable(doc, {
                 startY: 44,
-                head: [['Juzgado / Origen', 'Radicado', 'Demandante', 'Demandado / Juzgado', 'Estado / Actuación', 'Hoja']],
+                head: [['Juzgado / Origen', 'Radicado', 'Demandante', 'Demandado', 'Estado / Actuación', 'Hoja']],
                 body: tableData,
                 theme: 'grid',
                 headStyles: { fillColor: [37, 99, 235] }, // Blue-600
@@ -319,8 +319,8 @@ export default function Home() {
                     0: { cellWidth: 40 }, // Juzgado column
                     1: { cellWidth: 25 },
                     2: { cellWidth: 35 },
-                    3: { cellWidth: 40 },
-                    4: { cellWidth: 35 },
+                    3: { cellWidth: 35 },
+                    4: { cellWidth: 40 }, // Expanded for Acts/Estado
                     5: { cellWidth: 15 }
                 }
             });
