@@ -83,7 +83,24 @@ export default function Home() {
                 const secondCell = row[1];
 
                 if (firstCell && typeof firstCell === 'string' && (!secondCell || secondCell.toString().trim() === '')) {
-                    if (firstCell.trim().length > 5) {
+                    // Normalize: remove all spaces to check for keywords
+                    const text = firstCell.toString().toUpperCase().replace(/\s+/g, '');
+                    // Keywords that strongly suggest a court header (e.g. "S E P T I M O   C I V I L")
+                    const isCourtHeader =
+                        text.includes('CIRCUITO') ||
+                        text.includes('MUNICIPAL') ||
+                        text.includes('TRIBUNAL') ||
+                        text.includes('JUZGADO') ||
+                        text.includes('CONSEJO') ||
+                        text.includes('SUPREMA') ||
+                        text.includes('SALA') ||
+                        text.includes('FAMILIA') ||
+                        text.includes('LABORAL') ||
+                        text.includes('ADMINISTRATIVO') ||
+                        text.includes('PROMISCUO') ||
+                        text.includes('CIVIL'); // Added CIVIL since user explicitly mentioned it
+
+                    if (isCourtHeader && text.length > 5) {
                         currentContext = firstCell.trim();
                     }
                 }
