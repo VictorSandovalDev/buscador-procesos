@@ -19,6 +19,7 @@ interface SearchResult {
     data: any[];
     id: string; // Unique ID for selection matching
     context?: string; // Juzgado / Header context
+    stateContext?: string; // Estado / Fecha context (e.g., "ESTADO 18 DEL 10 FEBRERO 2026")
 }
 
 export default function Home() {
@@ -76,6 +77,7 @@ export default function Home() {
             const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: null }) as any[][];
 
             let currentContext = '';
+            let currentStateContext = '';
 
             jsonData.forEach((row, rowIndex) => {
                 // Heuristic: Identify "Juzgado" headers
@@ -212,11 +214,23 @@ export default function Home() {
                                         currentContext = raw;
                                     }
                                 });
-                            } else {
-                                currentContext = raw;
                             }
                         } catch (e) {
                             currentContext = firstCell.trim();
+                        }
+                    }
+
+                    // Heuristic: Identify "Estado" / "Date" headers
+                    // e.g. "ESTADO 18 DEL 10 FEBRERO 2026" or "ESTADOS EDICTOS Y TRASLADOS NO HAN SIDO FIJADOS"
+                    if (firstCell && typeof firstCell === 'string' && (!secondCell || secondCell.toString().trim() === '')) {
+                        const text = firstCell.toString().toUpperCase().trim();
+                        if (text.startsWith('ESTADO') || text.includes('FIJADO') || text.includes('FEBRERO') || text.includes('ENERO') || text.includes('MARZO') || text.includes('ABRIL') || text.includes('MAYO') || text.includes('JUNIO') || text.includes('JULIO') || text.includes('AGOSTO') || text.includes('SEPTIEMBRE') || text.includes('OCTUBRE') || text.includes('NOVIEMBRE') || text.includes('DICIEMBRE')) {
+                            // This is likely a date/state header, NOT a court header
+                            // Prioritize it as state context, but ensure it doesn't overwrite court context if logic overlaps
+                            // Actually, these are usually distinct lines.
+                            if (!isCourtHeader) {
+                                currentStateContext = text;
+                            }
                         }
                     }
                 }
@@ -229,7 +243,8 @@ export default function Home() {
                         rowIndex: rowIndex + 1, // 1-based index for display
                         data: row,
                         id: `${sheetName}-${rowIndex}`,
-                        context: currentContext
+                        context: currentContext,
+                        stateContext: currentStateContext
                     });
                 }
             });
@@ -299,10 +314,11 @@ export default function Home() {
 
             const tableData = selectedResults.map(r => [
                 r.context || 'Sin asignar', // Juzgado / Origen
+                r.stateContext || '-', // Estado / Fecha (New Column)
                 r.data[0] || '-', // Radicado
                 r.data[1] || '-', // Demandante
                 r.data[2] || '-', // Demandado
-                r.data[3] || '-', // Estado / Actuación (This is what user requested back if missing)
+                r.data[3] || '-', // Estado / Actuación
                 r.sheetName
             ]);
 
@@ -310,18 +326,19 @@ export default function Home() {
 
             autoTable(doc, {
                 startY: 44,
-                head: [['Juzgado / Origen', 'Radicado', 'Demandante', 'Demandado', 'Estado / Actuación', 'Hoja']],
+                head: [['Juzgado', 'Estado / Fecha', 'Radicado', 'Demandante', 'Demandado', 'Actuación', 'Hoja']],
                 body: tableData,
                 theme: 'grid',
                 headStyles: { fillColor: [37, 99, 235] }, // Blue-600
-                styles: { fontSize: 8, cellPadding: 3 },
+                styles: { fontSize: 7, cellPadding: 2 }, // Slightly smaller font to fit col
                 columnStyles: {
-                    0: { cellWidth: 40 }, // Juzgado column
-                    1: { cellWidth: 25 },
-                    2: { cellWidth: 35 },
-                    3: { cellWidth: 35 },
-                    4: { cellWidth: 40 }, // Expanded for Acts/Estado
-                    5: { cellWidth: 15 }
+                    0: { cellWidth: 35 }, // Juzgado
+                    1: { cellWidth: 25 }, // Estado/Fecha
+                    2: { cellWidth: 20 }, // Radicado
+                    3: { cellWidth: 30 }, // Demandante
+                    4: { cellWidth: 30 }, // Demandado
+                    5: { cellWidth: 35 }, // Actuación
+                    6: { cellWidth: 10 }  // Hoja
                 }
             });
 
@@ -506,13 +523,18 @@ export default function Home() {
 
                                         <div className="pl-8">
                                             <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
-                                                <div className="flex items-center gap-2">
+                                                <div className="flex items-center gap-2 flex-wrap">
                                                     <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded uppercase tracking-wide">
                                                         Hoja: {result.sheetName}
                                                     </span>
                                                     {result.context && (
                                                         <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs font-semibold rounded uppercase tracking-wide max-w-[200px] truncate" title={result.context}>
                                                             {result.context}
+                                                        </span>
+                                                    )}
+                                                    {result.stateContext && (
+                                                        <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded uppercase tracking-wide max-w-[200px] truncate" title={result.stateContext}>
+                                                            {result.stateContext}
                                                         </span>
                                                     )}
                                                     <span className="text-sm text-gray-500 ml-auto">Fila {result.rowIndex}</span>
