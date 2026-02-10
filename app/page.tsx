@@ -532,14 +532,17 @@ export default function Home() {
                                                             {result.context}
                                                         </span>
                                                     )}
-                                                    {result.stateContext && (
-                                                        <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded uppercase tracking-wide max-w-[200px] truncate" title={result.stateContext}>
-                                                            {result.stateContext}
-                                                        </span>
-                                                    )}
                                                     <span className="text-sm text-gray-500 ml-auto">Fila {result.rowIndex}</span>
                                                 </div>
                                             </div>
+
+                                            {/* Prominent State/Date Display */}
+                                            {result.stateContext && (
+                                                <div className="mb-4 bg-yellow-50 border border-yellow-200 text-yellow-800 p-2 rounded-lg text-sm font-bold text-center uppercase tracking-wide">
+                                                    {result.stateContext}
+                                                </div>
+                                            )}
+
                                             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-sm">
                                                 <div className="space-y-1">
                                                     <span className="block text-xs font-medium text-gray-500 uppercase">Radicado / ID</span>
