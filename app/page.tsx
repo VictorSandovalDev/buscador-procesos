@@ -183,6 +183,25 @@ export default function Home() {
                                 // Default fallback: use the raw text if it doesn't look like spaced-out letters
                                 currentContext = raw;
                             }
+
+                            // --- NEW LOGIC START ---
+                            if (currentContext) {
+                                // 1. Normalize to UPPERCASE
+                                let context = currentContext.toUpperCase();
+
+                                // 2. Expand abbreviations
+                                context = context.replace(/^JDO\.?\s*/, 'JUZGADO ');
+                                context = context.replace(/^J\.\s*/, 'JUZGADO ');
+
+                                // 3. Prepend "JUZGADO" if it starts with a number (and doesn't already have JUZGADO)
+                                if (/^\d/.test(context) && !context.startsWith('JUZGADO')) {
+                                    context = 'JUZGADO ' + context;
+                                }
+
+                                currentContext = context;
+                            }
+                            // --- NEW LOGIC END ---
+
                         } catch (e) {
                             currentContext = firstCell.trim();
                         }
