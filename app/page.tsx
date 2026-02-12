@@ -100,7 +100,21 @@ export default function Home() {
                         text.includes('LABORAL') ||
                         text.includes('ADMINISTRATIVO') ||
                         text.includes('PROMISCUO') ||
-                        text.includes('CIVIL'); // Added CIVIL since user explicitly mentioned it
+                        text.includes('CIVIL') ||
+                        text.includes('PEQUEÑAS') ||
+                        text.includes('CAUSAS') ||
+                        text.includes('JUEZ') ||
+                        text.includes('DESPACHO') ||
+                        text.includes('PRIMERO') ||
+                        text.includes('SEGUNDO') ||
+                        text.includes('TERCERO') ||
+                        text.includes('CUARTO') ||
+                        text.includes('QUINTO') ||
+                        text.includes('SEXTO') ||
+                        text.includes('SEPTIMO') ||
+                        text.includes('OCTAVO') ||
+                        text.includes('NOVENO') ||
+                        text.includes('DECIMO');
 
                     if (isCourtHeader && text.length > 5) {
                         try {
@@ -115,9 +129,9 @@ export default function Home() {
                             // We attempt to identify this by checking if many single letters are space-separated.
                             else if (/\s[A-Z]\s/.test(raw) || /^[A-Z](\s[A-Z])+$/.test(raw)) {
                                 // Remove ALL spaces to get "PRIMERODEFAMILIA"
-                                const compressed = raw.replace(/\s+/g, '');
+                                let compressed = raw.replace(/\s+/g, '');
 
-                                // Insert spaces before known keywords to separate them
+                                // Attempt to insert spaces before known keywords to separate them
                                 // This list must be ordered carefully (longest first usually helps)
                                 const KEYWORDS = [
                                     'JUZGADO', 'PROMISCUO', 'MUNICIPAL', 'CIRCUITO', 'CIVIL', 'FAMILIA',
@@ -129,91 +143,45 @@ export default function Home() {
                                     'DE', 'DEL', 'EL', 'LA', 'LOS', 'LAS', 'Y', 'EN'
                                 ];
 
-                                // Simple greedy insertion of spaces
-                                let result = compressed;
-                                KEYWORDS.forEach(word => {
-                                    // Use regex to insert space if word is found and not already spaced?
-                                    // Actually, replacing the word with " WORD " might be safer, then trim spaces.
-                                    // But naive replacement might break substrings (e.g. replacing DE in DEMANDA).
-                                    // Given the domain, headers are usually composed JUST of these words.
-                                });
-
-                                // Better approach: Tokenize based on keywords
-                                // We will format the string by replacing known keywords with " KEYWORD "
-                                let formatted = compressed;
-                                // Sort by length desc to match 'ADMINISTRATIVO' before 'TIVO' if that existed
+                                // Sort by length desc
                                 const sortedKeywords = KEYWORDS.sort((a, b) => b.length - a.length);
 
-                                for (const word of sortedKeywords) {
-                                    // Replace word with space-padded version, but only if it's not already padded?
-                                    // Actually, since we stripped all spaces, we just pad everything.
-                                    // Use a marker to avoid re-replacing?
-                                    // Let's just try to insert spaces.
-                                    const regex = new RegExp(word, 'g');
-                                    // We use a temporary placeholder to avoid matching substrings of already replaced words
-                                    // But complex. 
+                                // Replace known keywords with space-padded versions
+                                // We iterate through sorted keywords and replace instances in the compressed string
+                                // NOTE: This is tricky because "DE" matches inside "DEMANDA".
+                                // However, court headers are usually constructed from these words exclusively.
 
-                                    // Alternative: Just return the compressed string but somewhat readable? 
-                                    // The user specifically asked to "juntalas" (join them) like "SEXTO DE FAMILIA".
-                                    // Since I cannot perfectly segment "PRIMERODEFAMILIA" without a full dictionary or NLP,
-                                    // I will trust the "Double Space" strategy covers most, and for single spaces,
-                                    // I will use a Regex to replace "LETTER SPACE LETTER" with "LETTER LETTER".
-                                    // BUT usually "SEXTO" is "S E X T O". 
-                                    // If I just remove spaces, I get "SEXTODEFAMILIA".
-                                    // The user said "juntalas de manera que quede como sexto de familia".
+                                // Alternative approach: tokenizing is hard. 
+                                // Let's try to match keywords from the raw string if we can, OR simply rely on the compressed string 
+                                // and accept some merged words if we can't do better.
+                                // BUT, the user specifically complained about "separados".
+                                // "SEXTODEFAMILIA" is better than "S E X T O...".
 
-                                    // Let's go with a specific set of replacements for common prepositions/connectors
-                                    // IF we have the compressed string.
-                                }
-
-                                // REVISION: If we can't reliably detect boundaries, 
-                                // let's just use the logic: "If mostly single letters space separated, remove spaces".
-                                // "SEXTODEFAMILIA" is better than "S E X T O ...".
-                                // But to get "SEXTO DE FAMILIA", we need to know boundaries.
-                                // Let's try to match the keywords in the ORIGINAL text if they are spaced out?
-                                // Regex: /S\s*E\s*X\s*T\s*O/
-
-                                let fixedText = raw;
+                                // Let's try to reconstruct spacing by matching keywords in the compressed string.
+                                let reconstructed = compressed;
                                 sortedKeywords.forEach(word => {
-                                    // Create a regex that matches the word with optional spaces between letters
-                                    // e.g. C\s*I\s*V\s*I\s*L
-                                    const spacedRegexPattern = word.split('').join('\\s*');
-                                    // We want to replace "C I V I L" with "CIVIL"
-                                    // But we need to make sure we don't merge across word boundaries if they are effectively merged in the spaced string.
-                                    // e.g. "S E X T O C I V I L" -> "SEXTOCIVIL" 
-                                    // Effectively we are back to square one without delimiters.
-
-                                    // USER TRUTH: The user says "algunos siguen saliendo separados".
-                                    // This means `raw` HAS spaces. 
-                                    // My previous logic `raw.replace(/\s+/g, '')` produced `SEXTODEFAMILIA`.
-                                    // Did the user see `SEXTODEFAMILIA`? No, they said "siguen saliendo separados".
-                                    // This implies logic fell into a case where it DIDNT remove spaces, 
-                                    // OR the double space check failed (maybe they are single spaces).
-
-                                    // So, forcing removal of spaces in the `else` block should at least fix "Separados".
-                                    // "SEXTODEFAMILIA" is a step forward from "S E X T O...".
-
-                                    // Let's force space removal if the word density is low (lot of spaces).
-                                    const nonSpaceCount = raw.replace(/\s/g, '').length;
-                                    const spaceCount = raw.match(/\s/g)?.length || 0;
-
-                                    // If spaces >= non-spaces, it's likely spaced text.
-                                    if (spaceCount >= nonSpaceCount - 1) {
-                                        // Aggressive normalize: Remove ALL spaces, then try to insert spaces for readability?
-                                        // Or just standard "Collapse all spaces".
-                                        currentContext = raw.replace(/\s+/g, '');
-
-                                        // Try to recover " DE ", " DEL ", " Y " to split it a bit?
-                                        currentContext = currentContext
-                                            .replace(/(JUZGADO|CIRCUITO|MUNICIPAL|FAMILIA|CIVIL|LABORAL|PROMISCUO|ADMINISTRATIVO|TRIBUNAL|SUPERIOR|SALA|PEQUEÑAS|CAUSAS)/g, ' $1 ')
-                                            .replace(/(PRIMERO|SEGUNDO|TERCERO|CUARTO|QUINTO|SEXTO|SEPTIMO|OCTAVO|NOVENO|DECIMO)/g, ' $1 ')
-                                            .replace(/(DEL?|LA|LOS|LAS|Y)/g, ' $1 ')
-                                            .replace(/\s+/g, ' ')
-                                            .trim();
-                                    } else {
-                                        currentContext = raw;
+                                    // Only replace if the word exists and we haven't already messed it up?
+                                    // A global replace might be safe enough for these specific strings.
+                                    // Use a temporary placeholder or just spaces?
+                                    // Let's protect "DEMANDA" type collisions?
+                                    // Actually, "DEMANDA" is not a keyword here. "DE" is.
+                                    // "DE" is dangerous.
+                                    if (word.length > 3) {
+                                        const regex = new RegExp(word, 'g');
+                                        reconstructed = reconstructed.replace(regex, ` ${word} `);
                                     }
                                 });
+                                // Handle short words carefully?
+                                // "DE", "DEL", "Y", "LA"
+                                // Maybe only replace if they are surrounded by known long keywords?
+                                // For now, let's just stick with the "remove all spaces" strategy if it's spaced out text,
+                                // and try to add spaces for big words.
+
+                                currentContext = reconstructed.replace(/\s+/g, ' ').trim();
+
+                            } else {
+                                // Default fallback: use the raw text if it doesn't look like spaced-out letters
+                                currentContext = raw;
                             }
                         } catch (e) {
                             currentContext = firstCell.trim();
