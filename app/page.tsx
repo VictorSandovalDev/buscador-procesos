@@ -281,7 +281,7 @@ export default function Home() {
     const generatePDF = () => {
         try {
             console.log("Iniciando generación de PDF...");
-            const doc = new jsPDF();
+            const doc = new jsPDF({ orientation: 'landscape' });
             console.log("Documento PDF creado");
 
             const selectedResults = Array.from(selectedItems.values());
@@ -317,16 +317,8 @@ export default function Home() {
                 body: tableData,
                 theme: 'grid',
                 headStyles: { fillColor: [37, 99, 235] }, // Blue-600
-                styles: { fontSize: 7, cellPadding: 2 }, // Slightly smaller font to fit col
-                columnStyles: {
-                    0: { cellWidth: 35 }, // Juzgado
-                    1: { cellWidth: 25 }, // Estado/Fecha
-                    2: { cellWidth: 20 }, // Radicado
-                    3: { cellWidth: 30 }, // Demandante
-                    4: { cellWidth: 30 }, // Demandado
-                    5: { cellWidth: 35 }, // Actuación
-                    6: { cellWidth: 10 }  // Hoja
-                }
+                styles: { fontSize: 8, cellPadding: 2 }, // Increased font size slightly for landscape
+                // Removed fixed columnStyles to allow auto-sizing in landscape
             });
 
             console.log("Tabla generada, guardando archivo...");
